@@ -1,0 +1,15 @@
+#!/usr/bin/env ruby
+require_relative 'bulls_tools'
+
+help_msg = <<HELP_MSG
+Usage: #{File.basename(__FILE__)} [<local-branch> [<remote-branch> [<remote-repo>]]]
+
+Does a 'git push --force', but checks that the commits in the remote branch are included in the history of the local branch first.
+
+Default args: <current-branch> <current-branch> origin
+
+HELP_MSG
+
+BullsTools::Cmd.check_args_for_help(help_msg)
+
+BullsTools::Git.force_push_safely(ARGV[0], ARGV[1], ARGV[2])
