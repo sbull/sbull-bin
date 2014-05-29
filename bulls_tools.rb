@@ -10,12 +10,38 @@ module BullsTools
       out
     end
 
+    def wrap_errors(options=nil, &block)
+      options ||= {}
+      yield
+      true
+    rescue => e
+      if options[:rescue]
+        begin
+          options[:rescue].call
+        rescue => e2
+          puts e2
+        end
+      end
+      puts '', e
+      false
+    end
+
 
     class << self
 
       def check_args_for_help(msg, args=nil)
         args ||= ARGV
-        unless (args & ['help', '--help', '-h', '-help']).empty?
+        # Look for a help flag.
+        wants_help = (args & ['help', '--help', '-h', '-help', '-?', '?']).length > 0
+        # Prevent empty args.
+        # Use a flag to allow empty args.
+        no_args = args.empty?
+        if args.length == 1 && ['-y', '--yes', '-f', '--force'].include?(args.first)
+          args.shift # remove the flag.
+        end
+        if wants_help || no_args
+          msg += "\n" unless msg.match(/\n\z/)
+          msg += "(Empty args safety check: use '-y' option to run with default args.)\n"
           puts msg
           exit
         end
@@ -25,12 +51,28 @@ module BullsTools
 
   end
 
+
   module Git
 
     class << self
       include Cmd
 
       def force_push_safely(local=nil, remote=nil, repo=nil)
+        wrap_errors do
+          force_push_safely_helper(local, remote, repo)
+        end
+      end
+
+      def merge_safely(child, parent=nil, remote=nil)
+        wrap_errors(rescue: ->{ run_cmd("git status") }) do
+          merge_safely_helper(child, parent, remote)
+        end
+      end
+
+
+      private
+
+      def force_push_safely_helper
         local, remote, repo = default_branch_params(local, remote, repo)
 
         # Get the latest updates from the remote repo.
@@ -56,16 +98,12 @@ module BullsTools
         puts "\nSuccessfully pushed #{local} to #{repo}/#{remote}."
       end
 
-      def log_commit_for_compare(branch, repo=nil, skip=nil)
-        branch = "#{repo}/#{branch}" if repo
-        skip ||= 0
-        log = run_cmd("git log -1 --skip=#{skip} --format=medium #{branch}")
-        log.sub(/^\s*commit\b[^\n]*\n/,'')
-      end
-
-      def merge_safely(child, parent=nil, remote=nil)
+      def merge_safely_helper(child, parent=nil, remote=nil)
         parent ||= 'master'
         child, parent, remote = default_branch_params(child, parent, remote)
+        if child == parent
+          raise "Invalid arguments: branches to merge are identical, can't merge '#{child}' into '#{parent}'"
+        end
 
         git_status = run_cmd("git status -s")
         unless git_status == ''
@@ -126,14 +164,13 @@ module BullsTools
         end
 
         puts "\nSuccessfully pulled #{child} into #{parent}."
+      end
 
-      rescue => e
-        begin
-          run_cmd("git status")
-        rescue => e2
-          puts e2
-        end
-        raise e
+      def log_commit_for_compare(branch, repo=nil, skip=nil)
+        branch = "#{repo}/#{branch}" if repo
+        skip ||= 0
+        log = run_cmd("git log -1 --skip=#{skip} --format=medium #{branch}")
+        log.sub(/^\s*commit\b[^\n]*\n/,'')
       end
 
       def remote_contains_local?(local=nil, remote=nil, repo=nil)
