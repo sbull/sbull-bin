@@ -22,7 +22,7 @@ module BullsTools
           puts e2
         end
       end
-      puts '', e
+      puts '', "ERROR: #{e}"
       false
     end
 
@@ -184,7 +184,7 @@ module BullsTools
       end
 
       def current_branch
-        run_cmd("git symbolic-ref --short HEAD")
+        run_cmd("git symbolic-ref --short HEAD").chomp
       end
 
       def default_branch_params(local=nil, remote=nil, repo=nil)
