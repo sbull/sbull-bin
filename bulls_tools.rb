@@ -72,7 +72,7 @@ module BullsTools
 
       private
 
-      def force_push_safely_helper
+      def force_push_safely_helper(local=nil, remote=nil, repo=nil)
         local, remote, repo = default_branch_params(local, remote, repo)
 
         # Get the latest updates from the remote repo.
