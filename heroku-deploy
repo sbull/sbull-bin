@@ -1,0 +1,12 @@
+#!/bin/bash
+remote=$1
+if [[ -n $remote ]]; then
+  cmd1="git push $remote master"
+  cmd2="heroku run rake db:migrate --remote $remote"
+  cmd3="heroku restart --remote $remote"
+  echo "Running: $cmd1 && $cmd2 && $cmd3"
+  $cmd1 && $cmd2 && $cmd3
+else
+  echo "Usage: `basename $0` <remote>"
+  exit 1
+fi
