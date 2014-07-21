@@ -1,0 +1,19 @@
+#!/usr/bin/env ruby
+require_relative 'bulls_tools'
+
+help_msg = <<HELP_MSG
+Usage: #{File.basename(__FILE__)} [options] <pattern>
+
+SEE USAGE FOR 'git grep'. Same usage as git-grep, except <pathspec> (the last argument, indicating the paths to search) is not allowed.
+
+Does a 'git grep ... -- `git ls-files | grep -v <EXCLUDED_PATHS>`', effectively ignoring anything in EXCLUDED_PATHS.
+
+See http://stackoverflow.com/questions/10423143/how-to-exclude-certain-directories-files-from-git-grep-search
+
+Particularly useful to ignore vendor files, packages, 3rd-party libraries, etc.
+
+HELP_MSG
+
+BullsTools::Cmd.check_args_for_help(help_msg, nil, skip_empty_check: true)
+
+BullsTools::Git.grep_except_libs(ARGV)

@@ -29,19 +29,24 @@ module BullsTools
 
     class << self
 
-      def check_args_for_help(msg, args=nil)
+      def check_args_for_help(msg, args=nil, options=nil)
         args ||= ARGV
+        options ||= {}
         # Look for a help flag.
         wants_help = (args & ['help', '--help', '-h', '-help', '-?', '?']).length > 0
         # Prevent empty args.
         # Use a flag to allow empty args.
-        no_args = args.empty?
-        if args.length == 1 && ['-y', '--yes', '-f', '--force'].include?(args.first)
-          args.shift # remove the flag.
+        unless options[:skip_empty_check]
+          no_args = args.empty?
+          if args.length == 1 && ['-y', '--yes', '-f', '--force'].include?(args.first)
+            args.shift # remove the flag.
+          end
         end
         if wants_help || no_args
-          msg += "\n" unless msg.match(/\n\z/)
-          msg += "(Empty args safety check: use '-y' option to run with default args.)\n"
+          unless options[:skip_empty_check]
+            msg += "\n" unless msg.match(/\n\z/)
+            msg += "(Empty args safety check: use '-y' option to run with default args.)\n"
+          end
           puts msg
           exit
         end
@@ -69,8 +74,25 @@ module BullsTools
         end
       end
 
+      def grep_except_libs(args)
+        wrap_errors do
+          grep_except_libs_helper(args)
+        end
+      end
+
 
       private
+
+      EXCLUDED_PATHS = %w( node_modules vendor.* ).freeze
+      def grep_except_libs_helper(args)
+        excluded = EXCLUDED_PATHS.collect{|p| "^#{p}/"}.join('|')
+        cmd = "git grep #{args.join(' ')} -- `git ls-files | grep -vE '#{excluded}'`"
+        puts cmd
+        puts
+        cmd += ' ; echo \'\n'+cmd.split("'").join("'\\''")+"'"
+        # cmd.gsub("'", "'\\''") doesn't work - due to back-references?
+        exec(cmd)
+      end
 
       def force_push_safely_helper(local=nil, remote=nil, repo=nil)
         local, remote, repo = default_branch_params(local, remote, repo)
