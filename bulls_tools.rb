@@ -26,6 +26,11 @@ module BullsTools
       false
     end
 
+    def escape_quotes(cmd)
+      # cmd.gsub("'", "'\\''") doesn't work - due to back-references?
+      cmd.split("'").join("'\\''")
+    end
+
 
     class << self
 
@@ -86,11 +91,10 @@ module BullsTools
       EXCLUDED_PATHS = %w( node_modules vendor.* ).freeze
       def grep_except_libs_helper(args)
         excluded = EXCLUDED_PATHS.collect{|p| "^#{p}/"}.join('|')
-        cmd = "git grep #{args.join(' ')} -- `git ls-files | grep -vE '#{excluded}'`"
+        cmd = "git grep "+args.collect{|a| "'"+escape_quotes(a)+"'"}.join(' ')+" -- `git ls-files | grep -vE '#{excluded}'`"
         puts cmd
         puts
-        cmd += ' ; echo \'\n'+cmd.split("'").join("'\\''")+"'"
-        # cmd.gsub("'", "'\\''") doesn't work - due to back-references?
+        cmd += ' ; echo \'\n'+escape_quotes(cmd)+"'"
         exec(cmd)
       end
 
