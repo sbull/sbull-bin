@@ -90,8 +90,22 @@ module BullsTools
 
       EXCLUDED_PATHS = %w( node_modules vendor.* ).freeze
       def grep_except_libs_helper(args)
-        excluded = EXCLUDED_PATHS.collect{|p| "^#{p}/"}.join('|')
-        cmd = "git grep "+args.collect{|a| "'"+escape_quotes(a)+"'"}.join(' ')+" -- `git ls-files | grep -vE '#{excluded}'`"
+        args = args.dup
+        pathspecs = []
+        while arg = args.pop
+          if arg.match(/^(-|\d+$|\)$)/)
+            args.push(arg)
+            break
+          else
+            pathspecs.unshift(arg)
+          end
+        end
+        args.push(pathspecs.shift) unless pathspecs.empty?
+        if pathspecs.empty?
+          excluded = EXCLUDED_PATHS.collect{|p| "^#{p}/"}.join('|')
+          pathspecs = ["`git ls-files | grep -vE '#{excluded}'`"]
+        end
+        cmd = "git grep "+args.collect{|a| "'"+escape_quotes(a)+"'"}.join(' ')+" -- "+pathspecs.join(' ')
         puts cmd
         puts
         cmd += ' ; echo \'\n'+escape_quotes(cmd)+"'"
