@@ -209,7 +209,7 @@ module BullsTools
       def log_commit_for_compare(branch, repo=nil, skip=nil)
         branch = "#{repo}/#{branch}" if repo
         skip ||= 0
-        log = run_cmd("git log -1 --skip=#{skip} --format=medium #{branch}")
+        log = run_cmd("git log -1 --skip=#{skip} --format=medium #{branch} --")
         log.sub(/^\s*commit\b[^\n]*\n/,'')
       end
 
