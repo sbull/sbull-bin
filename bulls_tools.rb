@@ -190,18 +190,28 @@ module BullsTools
         # Push the merge.
         run_cmd("git push #{remote} #{parent}")
 
-        # Rebase the child branch.
-        run_cmd("git checkout #{child}")
-        run_cmd("git pull --ff-only #{remote} #{parent}")
-        run_cmd("git push #{remote} #{child}")
-
-        # Move back to the parent branch.
-        run_cmd("git checkout #{parent}")
-
+        ###
+        # Changed:
+        # - OLD: Sync the child branch to master.
+        # - NEW: Delete the child branch.
+        ###
+        # # Rebase the child branch.
+        # run_cmd("git checkout #{child}")
+        # run_cmd("git pull --ff-only #{remote} #{parent}")
+        # run_cmd("git push #{remote} #{child}")
+        #
+        # # Move back to the parent branch.
+        # run_cmd("git checkout #{parent}")
+        #
         # Kill the local child branch if it was created just for this.
-        unless has_local
-          run_cmd "git branch -d #{child}"
-        end
+        # unless has_local
+        #   run_cmd("git branch -d #{child}")
+        # end
+        ###
+
+        # Delete the remote & local child branches.
+        run_cmd("git push #{remote} :#{child}")
+        run_cmd("git branch -d #{child}")
 
         puts "\nSuccessfully pulled #{child} into #{parent}."
       end
