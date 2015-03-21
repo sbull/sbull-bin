@@ -1,19 +1,33 @@
 #!/usr/bin/env bash
 
-[ -s $HOME/.nvm/nvm.sh ] && PATH=/bin:/usr/bin . $HOME/.nvm/nvm.sh # This loads NVM
+# Remove this location from the PATH.
 
-SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
-SELF=$SCRIPTPATH/$(basename "$0")
-NODE=`type -ap node | grep -v "$SELF" | head -1`
+SELFNAME="${0##*/}"
+OLD_IFS="$IFS"
+OLD_PATH="$PATH"
+IFS=":"
+
+NEW_PATH=""
+for path in $OLD_PATH; do
+  testpath="${path}/${SELFNAME}"
+  if ! [ -x "$testpath" ] || [ `diff $0 "$testpath"` ]; then
+    NEW_PATH="${NEW_PATH}:${path}"
+  fi
+done
+NEW_PATH="${NEW_PATH#:}"
+IFS="$OLD_IFS"
+
+PATH="$NEW_PATH"
+
+[ -s $HOME/.nvm/nvm.sh ] && . $HOME/.nvm/nvm.sh # This loads NVM
 
 if type nvm > /dev/null && nvm which > /dev/null 2>&1; then
   nvm use > /dev/null
-  NODE=`nvm which | tail -1`
 #else
 #  echo "No node version specified by nvm. Using $NODE."
 fi
 
-exec "$NODE" "$@"
+exec "$SELFNAME" "$@"
 
 
 #set -e
