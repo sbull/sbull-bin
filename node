@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+
+[ -s $HOME/.nvm/nvm.sh ] && PATH=/bin:/usr/bin . $HOME/.nvm/nvm.sh # This loads NVM
+
+SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
+SELF=$SCRIPTPATH/$(basename "$0")
+NODE=`type -ap node | grep -v "$SELF" | head -1`
+
+if type nvm > /dev/null && nvm which > /dev/null 2>&1; then
+  nvm use > /dev/null
+  NODE=`nvm which | tail -1`
+#else
+#  echo "No node version specified by nvm. Using $NODE."
+fi
+
+exec "$NODE" "$@"
+
+
+#set -e
+#[ -n "$RBENV_DEBUG" ] && set -x
+#
+#program="${0##*/}"
+#if [ "$program" = "ruby" ]; then
+#  for arg; do
+#    case "$arg" in
+#    -e* | -- ) break ;;
+#    */* )
+#      if [ -f "$arg" ]; then
+#        export RBENV_DIR="${arg%/*}"
+#        break
+#      fi
+#      ;;
+#    esac
+#  done
+#fi
+#
+#export RBENV_ROOT="/home/steven/.rbenv"
+#exec "/home/steven/.rbenv/libexec/rbenv" exec "$program" "$@"
