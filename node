@@ -19,10 +19,12 @@ IFS="$OLD_IFS"
 
 PATH="$NEW_PATH"
 
+# ! type nvm > /dev/null && [ -s $HOME/.nvm/nvm.sh ] && . $HOME/.nvm/nvm.sh # This loads NVM
 [ -s $HOME/.nvm/nvm.sh ] && . $HOME/.nvm/nvm.sh # This loads NVM
 
-if type nvm > /dev/null && nvm which > /dev/null 2>&1; then
-  nvm use > /dev/null
+# if type nvm > /dev/null && nvm which > /dev/null 2>&1; then
+if type nvm > /dev/null 2>&1; then
+  nvm use > /dev/null 2>&1
 #else
 #  echo "No node version specified by nvm. Using $NODE."
 fi
