@@ -145,7 +145,7 @@ module BullsTools
           raise "Invalid arguments: branches to merge are identical, can't merge '#{child}' into '#{parent}'"
         end
 
-        git_status = run_cmd("git status -s")
+        git_status = run_cmd("git status -s -uno")
         unless git_status == ''
           raise "Unable to proceed with dirty working directory."
         end
