@@ -1,0 +1,15 @@
+#!/bin/bash
+TABLE=$1
+REMOTE=${2:-live}
+if [[ -n $TABLE ]]; then
+  set -x
+  TS=`date +%Y%m%d%H%M%S`
+  FILE=${TABLE}-${TS}.txt
+  BACKUP=${TABLE}_${TS}
+  echo "\\copy $TABLE to '$FILE'" | heroku pg:psql --remote $REMOTE
+  echo "CREATE TABLE $BACKUP ( LIKE $TABLE INCLUDING ALL ) ; INSERT INTO $BACKUP SELECT * FROM $TABLE ; TRUNCATE TABLE $TABLE; \\copy $TABLE from '$FILE'" | rails db
+  rm $FILE
+else
+  echo "Usage: `basename $0` <table> <heroku-remote>"
+  exit 1
+fi
