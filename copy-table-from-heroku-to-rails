@@ -7,7 +7,7 @@ if [[ -n $TABLE ]]; then
   FILE=${TABLE}-${TS}.txt
   BACKUP=${TABLE}_${TS}
   echo "\\copy $TABLE to '$FILE'" | heroku pg:psql --remote $REMOTE
-  echo "CREATE TABLE $BACKUP ( LIKE $TABLE INCLUDING ALL ) ; INSERT INTO $BACKUP SELECT * FROM $TABLE ; TRUNCATE TABLE $TABLE; \\copy $TABLE from '$FILE'" | rails db
+  echo "CREATE TABLE $BACKUP ( LIKE $TABLE INCLUDING ALL ) ; INSERT INTO $BACKUP SELECT * FROM $TABLE ; TRUNCATE TABLE $TABLE; \\copy $TABLE from '$FILE'; SELECT setval('${TABLE}_id_seq', max(id)) FROM $TABLE" | rails db
   rm $FILE
 else
   echo "Usage: `basename $0` <table> <heroku-remote>"
