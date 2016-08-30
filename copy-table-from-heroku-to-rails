@@ -1,6 +1,7 @@
 #!/bin/bash
 TABLE=$1
 REMOTE=${2:-live}
+KEEP_FILE=$3
 if [[ -n $TABLE ]]; then
   set -x
   TS=`date +%Y%m%d%H%M%S`
@@ -8,8 +9,10 @@ if [[ -n $TABLE ]]; then
   BACKUP=${TABLE}_${TS}
   echo "\\copy $TABLE to '$FILE'" | heroku pg:psql --remote $REMOTE
   echo "CREATE TABLE $BACKUP ( LIKE $TABLE INCLUDING ALL ) ; INSERT INTO $BACKUP SELECT * FROM $TABLE ; TRUNCATE TABLE $TABLE; \\copy $TABLE from '$FILE'; SELECT setval('${TABLE}_id_seq', max(id)) FROM $TABLE" | rails db
-  rm $FILE
+  if [[ -z $KEEP_FILE ]]; then
+    rm $FILE
+  fi
 else
-  echo "Usage: `basename $0` <table> <heroku-remote>"
+  echo "Usage: `basename $0` <table> <heroku-remote> <keep-file-flag>"
   exit 1
 fi
