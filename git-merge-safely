@@ -4,7 +4,7 @@ require_relative 'bulls_tools'
 help_msg = <<HELP_MSG
 Usage: #{File.basename(__FILE__)} [<child-branch> [<parent-branch> [<remote-repo>]]]
 
-Does a 'git pull --no-ff' of the child into the parent, fast-forwards the child branch, and pushes the branches to the remote repository. Checks that all updates are pulled from the remote repo first.
+Does a 'git pull --no-ff' of the child into the parent, fast-forwards the child branch, and pushes the branches to the remote repository. Checks that all updates are pulled from the remote repo first. Use --unsafe as the first arg to skip checks.
 
 Default args: <current-branch> master origin
 
@@ -12,4 +12,4 @@ HELP_MSG
 
 BullsTools::Cmd.check_args_for_help(help_msg)
 
-BullsTools::Git.merge_safely(ARGV[0], ARGV[1], ARGV[2])
+BullsTools::Git.merge_safely(ARGV)

@@ -73,9 +73,14 @@ module BullsTools
         end
       end
 
-      def merge_safely(child, parent=nil, remote=nil)
+      def merge_safely(args)
+        child = args.shift
+        unsafe = child == '--unsafe'
+        child = args.shift if unsafe
+        parent = args.shift
+        remote = args.shift
         wrap_errors(rescue: ->{ run_cmd("git status") }) do
-          merge_safely_helper(child, parent, remote)
+          merge_safely_helper(unsafe: unsafe, child: child, parent: parent, remote: remote)
         end
       end
 
@@ -138,16 +143,18 @@ module BullsTools
         puts "\nSuccessfully pushed #{local} to #{repo}/#{remote}."
       end
 
-      def merge_safely_helper(child, parent=nil, remote=nil)
+      def merge_safely_helper(unsafe:, child:, parent:, remote:)
         parent ||= 'master'
         child, parent, remote = default_branch_params(child, parent, remote)
         if child == parent
           raise "Invalid arguments: branches to merge are identical, can't merge '#{child}' into '#{parent}'"
         end
 
-        git_status = run_cmd("git status -s -uno")
-        unless git_status == ''
-          raise "Unable to proceed with dirty working directory."
+        unless unsafe
+          git_status = run_cmd("git status -s -uno")
+          unless git_status == ''
+            raise "Unable to proceed with dirty working directory."
+          end
         end
 
         # Get the latest updates from the remote repo.
@@ -161,8 +168,11 @@ module BullsTools
         end
 
         # Check that the local branches have been pushed to the remote repo.
-        unless remote_contains_local?(child) && remote_contains_local?(parent)
-          raise "You have local commits that have not been pushed to #{remote}."
+        unless remote_contains_local?(parent)
+          raise "You have local commits in #{parent} that have not been pushed to #{remote}."
+        end
+        unless unsafe || remote_contains_local?(child)
+          raise "You have local commits in #{child} that have not been pushed to #{remote}."
         end
 
         # Update the local repo.
