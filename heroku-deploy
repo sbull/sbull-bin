@@ -1,7 +1,7 @@
 #!/bin/bash
 remote=$1
 if [[ -n $remote ]]; then
-  cmd1="git push $remote master"
+  cmd1="git push $remote main"
   cmd2="heroku run rake db:migrate --remote $remote"
   cmd3="heroku restart --remote $remote"
   echo "Running: $cmd1 && $cmd2 && $cmd3"

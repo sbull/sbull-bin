@@ -144,7 +144,7 @@ module BullsTools
       end
 
       def merge_safely_helper(unsafe:, child:, parent:, remote:)
-        parent ||= 'master'
+        parent ||= 'main'
         child, parent, remote = default_branch_params(child, parent, remote)
         if child == parent
           raise "Invalid arguments: branches to merge are identical, can't merge '#{child}' into '#{parent}'"
@@ -194,7 +194,7 @@ module BullsTools
 
         # Merge the child into the parent.
         commit_msg = "Merge branch '#{child}'"
-        commit_msg += " into '#{parent}'" unless parent == 'master'
+        commit_msg += " into '#{parent}'" unless parent == 'main'
         run_cmd("git merge --no-ff -m \"#{commit_msg}\" #{child}")
 
         # Push the merge.
@@ -202,7 +202,7 @@ module BullsTools
 
         ###
         # Changed:
-        # - OLD: Sync the child branch to master.
+        # - OLD: Sync the child branch to main.
         # - NEW: Delete the child branch.
         ###
         # # Rebase the child branch.
