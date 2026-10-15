@@ -13,7 +13,27 @@ if [[ -n $CONTAINER ]] && [[ -n $REMOTE ]] && [[ -n $DATABASE ]] && [[ -n $TABLE
   FILE=${TABLE}-${TS}.txt
   BACKUP=${TABLE}_${TS}
   echo "\\copy $TABLE to '$FILE'" | heroku pg:psql $DATABASE --remote $REMOTE
-  echo "CREATE TABLE $BACKUP ( LIKE $TABLE INCLUDING ALL ) ; INSERT INTO $BACKUP SELECT * FROM $TABLE ; TRUNCATE TABLE $TABLE; \\copy $TABLE from '$FILE'; SELECT setval('${TABLE}_id_seq', GREATEST(1000000000, (SELECT MAX(id) FROM $TABLE), (SELECT MAX(id) FROM $BACKUP)))" | docker exec -i $CONTAINER rails db -p
+  if ! docker exec -i $CONTAINER cmp -s - "$FILE" < "$FILE"; then
+    { set +x; } 2>/dev/null
+    echo "ERROR: $FILE is not readable, or differs, from inside $CONTAINER (relative to its working directory). Is the container mounting this directory? Nothing was changed in the local database." >&2
+    exit 1
+  fi
+  ROWS=$(wc -l < "$FILE")
+  docker exec -i $CONTAINER rails db -p <<SQL
+\set ON_ERROR_STOP on
+BEGIN;
+CREATE TABLE $BACKUP ( LIKE $TABLE INCLUDING ALL );
+INSERT INTO $BACKUP SELECT * FROM $TABLE;
+TRUNCATE TABLE $TABLE;
+\copy $TABLE from '$FILE'
+DO \$\$ BEGIN
+  IF (SELECT COUNT(*) FROM $TABLE) <> $ROWS THEN
+    RAISE EXCEPTION '$TABLE has % rows but $FILE has $ROWS', (SELECT COUNT(*) FROM $TABLE);
+  END IF;
+END \$\$;
+SELECT setval('${TABLE}_id_seq', GREATEST(1000000000, (SELECT MAX(id) FROM $TABLE), (SELECT MAX(id) FROM $BACKUP)));
+COMMIT;
+SQL
   if [[ -z $KEEP_FILE ]]; then
     rm $FILE
   fi
