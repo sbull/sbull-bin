@@ -20,6 +20,7 @@ if [[ -n $CONTAINER ]] && [[ -n $REMOTE ]] && [[ -n $DATABASE ]] && [[ -n $TABLE
   fi
   ROWS=$(wc -l < "$FILE")
   docker exec -i $CONTAINER rails db -p <<SQL
+\set ECHO all
 \set ON_ERROR_STOP on
 BEGIN;
 CREATE TABLE $BACKUP ( LIKE $TABLE INCLUDING ALL );
